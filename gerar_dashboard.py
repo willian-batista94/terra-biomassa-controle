@@ -2,8 +2,9 @@
 planilha de controle (dados/*.xlsx).
 
 Uso:
-    python gerar_dashboard.py            # usa a planilha mais recente em dados/
-    python gerar_dashboard.py --check    # só valida, sem gravar nada
+    python gerar_dashboard.py              # usa a planilha mais recente em dados/
+    python gerar_dashboard.py --check      # só valida, sem gravar nada
+    python gerar_dashboard.py --publicar   # gera e também publica (git add + commit + push)
 
 O mapeamento de colunas foi construído lendo a estrutura da planilha-modelo
 "CONTROLE - CLIENTES - BIOMASSA CAVACO - TERRA BIOMASSA" (abas EMBARQUES,
@@ -17,6 +18,7 @@ dashboard_slim.json anterior antes de publicar.
 import argparse
 import json
 import re
+import subprocess
 import sys
 from datetime import date, datetime
 from pathlib import Path
@@ -304,9 +306,44 @@ def comparar_com_atual(dados: dict) -> bool:
     return igual
 
 
+def publicar():
+    """git add + commit + push só de index.html e dashboard_slim.json."""
+    def git(*args):
+        return subprocess.run(
+            ["git", *args], cwd=BASE_DIR, capture_output=True, text=True
+        )
+
+    add = git("add", "index.html", "dashboard_slim.json")
+    if add.returncode != 0:
+        raise SystemExit("Erro no 'git add':\n" + add.stderr)
+
+    sem_mudanca = git("diff", "--cached", "--quiet", "--", "index.html", "dashboard_slim.json")
+    if sem_mudanca.returncode == 0:
+        print("Nada para publicar — os dados já batem com o último commit.")
+        return
+
+    mensagem = f"Atualiza dados — {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+    commit = git("commit", "-m", mensagem)
+    if commit.returncode != 0:
+        raise SystemExit("Erro no 'git commit':\n" + commit.stderr)
+
+    push = git("push")
+    if push.returncode != 0:
+        raise SystemExit(
+            "Commit criado localmente, mas o 'git push' falhou:\n" + push.stderr
+        )
+
+    print(f"Publicado: \"{mensagem}\"")
+    print("O GitHub Pages atualiza em ~1 minuto.")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true", help="só compara, não grava nada")
+    parser.add_argument(
+        "--publicar", action="store_true",
+        help="depois de gerar, faz git add + commit + push de index.html e dashboard_slim.json",
+    )
     args = parser.parse_args()
 
     xlsx_path = achar_planilha()
@@ -323,6 +360,9 @@ def main():
     injetar_no_html(dados, HTML_SOURCE, HTML_SOURCE)
     injetar_no_html(dados, HTML_SOURCE, HTML_PUBLISH)
     print(f"Gerado: {JSON_PATH.name}, {HTML_SOURCE.name} (atualizado) e {HTML_PUBLISH.name} (para publicar)")
+
+    if args.publicar:
+        publicar()
 
 
 if __name__ == "__main__":
