@@ -1,0 +1,1095 @@
+<meta charset="UTF-8">
+<title>Terra Biomassa</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --bg:            #f6f5f0;
+    --surface:       #fffffe;
+    --surface-2:     #eeece3;
+    --border:        rgba(20,24,18,0.10);
+    --border-strong: rgba(20,24,18,0.18);
+    --text-primary:  #17190f;
+    --text-secondary:#54564a;
+    --text-muted:    #8a8c7e;
+    --accent:        #5a6f40;
+    --accent-strong: #3f5029;
+    --accent-wash:   rgba(90,111,64,0.12);
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+    --s5: #e87ba4; --s6: #008300; --s7: #4a3aa7; --s8: #e34948;
+    --good: #0ca30c; --warning: #c98200; --serious: #c4602f; --critical: #d03b3b;
+    --grid: #e5e3d9; --baseline: #c7c4b6;
+    --shadow: 0 1px 2px rgba(20,24,18,0.06), 0 8px 24px -12px rgba(20,24,18,0.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --bg:            #101210;
+      --surface:       #181a16;
+      --surface-2:     #202219;
+      --border:        rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.16);
+      --text-primary:  #f3f3ee;
+      --text-secondary:#c2c3b6;
+      --text-muted:    #8d8f80;
+      --accent:        #93ac72;
+      --accent-strong: #b4c993;
+      --accent-wash:   rgba(147,172,114,0.14);
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+      --s5: #d55181; --s6: #3caa3c; --s7: #9085e9; --s8: #e66767;
+      --good: #4bbf4b; --warning: #e0a828; --serious: #e08a63; --critical: #e66767;
+      --grid: #2a2c25; --baseline: #3a3c33;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg:            #101210;
+    --surface:       #181a16;
+    --surface-2:     #202219;
+    --border:        rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.16);
+    --text-primary:  #f3f3ee;
+    --text-secondary:#c2c3b6;
+    --text-muted:    #8d8f80;
+    --accent:        #93ac72;
+    --accent-strong: #b4c993;
+    --accent-wash:   rgba(147,172,114,0.14);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+    --s5: #d55181; --s6: #3caa3c; --s7: #9085e9; --s8: #e66767;
+    --good: #4bbf4b; --warning: #e0a828; --serious: #e08a63; --critical: #e66767;
+    --grid: #2a2c25; --baseline: #3a3c33;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0; background:var(--bg); color:var(--text-primary);
+    font-family:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{ font-family:"IBM Plex Mono", ui-monospace, monospace; }
+  ::selection{ background:var(--accent-wash); }
+  a{ color:inherit; }
+  button{ font-family:inherit; }
+
+  .app{ display:flex; min-height:100%; }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:264px; flex:none; background:var(--surface); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; gap:20px; padding:20px 16px;
+    position:sticky; top:0; height:100vh; overflow-y:auto;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; padding:2px 4px 4px; }
+  .brand-mark{
+    width:36px; height:36px; border-radius:9px; background:var(--accent); color:#fff;
+    display:flex; align-items:center; justify-content:center; flex:none; box-shadow:var(--shadow);
+  }
+  .brand-mark svg{ width:20px; height:20px; }
+  .brand-text .name{ font-weight:700; font-size:14.5px; letter-spacing:0.01em; line-height:1.15; }
+  .brand-text .sub{ font-size:11px; color:var(--text-muted); margin-top:1px; }
+
+  .nav{ display:flex; flex-direction:column; gap:2px; }
+  .nav-label{ font-size:10.5px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); padding:10px 10px 4px; }
+  .nav-item{
+    display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px;
+    font-size:13px; color:var(--text-secondary); cursor:pointer; border:1px solid transparent;
+    background:none; text-align:left; width:100%;
+  }
+  .nav-item svg{ width:16px; height:16px; flex:none; opacity:0.85; }
+  .nav-item:hover{ background:var(--surface-2); color:var(--text-primary); }
+  .nav-item.active{ background:var(--accent-wash); color:var(--accent-strong); font-weight:600; border-color:transparent; }
+  .nav-item.active svg{ opacity:1; }
+
+  .filters{ display:flex; flex-direction:column; gap:10px; padding-top:6px; border-top:1px solid var(--border); }
+  .field{ display:flex; flex-direction:column; gap:4px; }
+  .field label{ font-size:10.5px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-muted); }
+  .field input, .field select{
+    font:inherit; font-size:12.5px; padding:7px 8px; border-radius:7px; border:1px solid var(--border-strong);
+    background:var(--surface); color:var(--text-primary); width:100%;
+  }
+  .field input:focus, .field select:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+  .field-row{ display:flex; gap:6px; }
+  .field-row .field{ flex:1; min-width:0; }
+  .reset-btn{
+    margin-top:2px; font-size:12px; font-weight:600; color:var(--accent-strong); background:var(--accent-wash);
+    border:1px solid transparent; border-radius:7px; padding:7px 10px; cursor:pointer;
+  }
+  .reset-btn:hover{ border-color:var(--accent); }
+  .filter-hint{ font-size:11px; color:var(--text-muted); line-height:1.4; }
+
+  .sidebar-toggle{ display:none; }
+
+  /* ---------- Main ---------- */
+  .main{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .topbar{
+    position:sticky; top:0; z-index:5; background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter:blur(8px); border-bottom:1px solid var(--border);
+    padding:16px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+  .topbar h1{ font-size:18px; margin:0; font-weight:700; letter-spacing:-0.01em; }
+  .topbar .meta{ font-size:12px; color:var(--text-muted); margin-top:2px; }
+  .topbar-right{ display:flex; align-items:center; gap:10px; font-size:12px; color:var(--text-secondary); }
+  .badge-period{
+    font-family:"IBM Plex Mono", monospace; font-size:11.5px; background:var(--surface-2);
+    border:1px solid var(--border); padding:5px 9px; border-radius:6px; color:var(--text-secondary);
+  }
+  .menu-btn{
+    display:none; align-items:center; justify-content:center; width:34px; height:34px; border-radius:8px;
+    border:1px solid var(--border-strong); background:var(--surface); cursor:pointer; color:var(--text-primary);
+  }
+
+  .content{ padding:20px 24px 48px; display:flex; flex-direction:column; gap:22px; }
+  .view{ display:none; flex-direction:column; gap:22px; }
+  .view.active{ display:flex; }
+
+  .section-title{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:2px; }
+  .section-title h2{ font-size:14px; margin:0; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em; }
+  .section-title .note{ font-size:12px; color:var(--text-muted); }
+
+  /* ---------- KPI tiles ---------- */
+  .kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(178px,1fr)); gap:12px; }
+  .kpi{
+    background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px;
+    box-shadow:var(--shadow); display:flex; flex-direction:column; gap:6px; min-width:0;
+  }
+  .kpi .label{ font-size:11.5px; color:var(--text-muted); font-weight:600; letter-spacing:0.02em; }
+  .kpi .value{ font-size:22px; font-weight:700; letter-spacing:-0.01em; line-height:1.1; }
+  .kpi .value .unit{ font-size:12px; font-weight:600; color:var(--text-secondary); margin-left:3px; }
+  .kpi .sub{ font-size:11.5px; color:var(--text-muted); }
+  .kpi .sub b{ color:var(--text-secondary); font-weight:600; }
+  .kpi.accent .value{ color:var(--accent-strong); }
+  .kpi.warn .value{ color:var(--serious); }
+
+  /* ---------- Cards / grid ---------- */
+  .grid-2{ display:grid; grid-template-columns:1.3fr 1fr; gap:16px; }
+  .grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media (max-width:980px){ .grid-2, .grid-3{ grid-template-columns:1fr; } }
+
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 18px 12px;
+    box-shadow:var(--shadow); min-width:0;
+  }
+  .card-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  .card-head h3{ font-size:13.5px; margin:0; font-weight:600; }
+  .card-head .desc{ font-size:11.5px; color:var(--text-muted); margin-top:2px; }
+  .card-legend{ display:flex; gap:10px; flex-wrap:wrap; font-size:11px; color:var(--text-secondary); }
+  .legend-item{ display:flex; align-items:center; gap:5px; }
+  .legend-dot{ width:8px; height:8px; border-radius:2px; flex:none; }
+  .chart-wrap{ position:relative; width:100%; }
+
+  /* ---------- Tables ---------- */
+  .table-scroll{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  thead th{
+    text-align:left; font-size:10.5px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase;
+    color:var(--text-muted); padding:8px 10px; border-bottom:1px solid var(--border); white-space:nowrap;
+  }
+  tbody td{ padding:8px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr:hover{ background:var(--surface-2); }
+  td.num, th.num{ text-align:right; font-family:"IBM Plex Mono", monospace; font-variant-numeric:tabular-nums; }
+
+  .pill{
+    display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:99px; font-size:11px;
+    font-weight:600; white-space:nowrap; border:1px solid transparent;
+  }
+  .pill .dot{ width:6px; height:6px; border-radius:50%; flex:none; }
+  .pill-good{ background:color-mix(in srgb, var(--good) 14%, transparent); color:var(--good); }
+  .pill-good .dot{ background:var(--good); }
+  .pill-warning{ background:color-mix(in srgb, var(--warning) 16%, transparent); color:var(--warning); }
+  .pill-warning .dot{ background:var(--warning); }
+  .pill-serious{ background:color-mix(in srgb, var(--serious) 16%, transparent); color:var(--serious); }
+  .pill-serious .dot{ background:var(--serious); }
+  .pill-critical{ background:color-mix(in srgb, var(--critical) 15%, transparent); color:var(--critical); }
+  .pill-critical .dot{ background:var(--critical); }
+  .pill-neutral{ background:var(--surface-2); color:var(--text-secondary); }
+  .pill-neutral .dot{ background:var(--text-muted); }
+
+  /* ---------- Meter ---------- */
+  .meter-row{ display:flex; flex-direction:column; gap:5px; padding:9px 0; border-bottom:1px solid var(--border); }
+  .meter-row:last-child{ border-bottom:none; }
+  .meter-top{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:12.5px; }
+  .meter-top .name{ font-weight:600; }
+  .meter-top .val{ font-family:"IBM Plex Mono", monospace; font-size:12px; color:var(--text-secondary); font-variant-numeric:tabular-nums; }
+  .meter-track{ height:8px; border-radius:5px; background:var(--surface-2); overflow:hidden; }
+  .meter-fill{ height:100%; border-radius:5px; background:var(--s1); }
+  .meter-sub{ font-size:11px; color:var(--text-muted); }
+
+  .empty-note{ font-size:12px; color:var(--text-muted); padding:10px 2px; }
+
+  /* Tooltip (custom, for area/line charts) is handled by Chart.js built-in tooltip styled via options */
+
+  footer.app-footer{ padding:8px 24px 28px; font-size:11px; color:var(--text-muted); }
+
+  /* ---------- Mobile ---------- */
+  @media (max-width:880px){
+    .sidebar{
+      position:fixed; left:0; top:0; z-index:20; transform:translateX(-100%);
+      transition:transform .18s ease; box-shadow:0 0 0 100vmax rgba(0,0,0,0); width:82vw; max-width:300px;
+    }
+    .sidebar.open{ transform:translateX(0); box-shadow:0 0 40px rgba(0,0,0,0.35); }
+    .menu-btn{ display:inline-flex; }
+    .topbar{ padding:14px 16px; }
+    .content{ padding:16px 16px 40px; }
+    .grid-2, .grid-3{ grid-template-columns:1fr; }
+    footer.app-footer{ padding:8px 16px 28px; }
+  }
+  .scrim{ display:none; }
+  .scrim.show{ display:block; position:fixed; inset:0; background:rgba(10,12,8,0.35); z-index:15; }
+
+  /* ---------- Acesso ---------- */
+  body:not(.unlocked) .app{ display:none; }
+  .gate{ display:none; min-height:100vh; align-items:center; justify-content:center; background:var(--bg); padding:20px; }
+  body:not(.unlocked) .gate{ display:flex; }
+  body.unlocked .gate{ display:none; }
+  .gate-box{
+    width:100%; max-width:340px; background:var(--surface); border:1px solid var(--border); border-radius:14px;
+    box-shadow:var(--shadow); padding:28px 24px; display:flex; flex-direction:column; gap:12px; text-align:center;
+  }
+  .gate-title{ font-weight:700; font-size:16px; letter-spacing:0.02em; }
+  .gate-sub{ font-size:12.5px; color:var(--text-muted); margin-bottom:6px; }
+  .gate-box input{
+    font:inherit; font-size:14px; padding:10px 12px; border-radius:8px; border:1px solid var(--border-strong);
+    background:var(--surface); color:var(--text-primary); width:100%; text-align:center;
+  }
+  .gate-box input:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+  .gate-box button{
+    font-size:13.5px; font-weight:600; color:#fff; background:var(--accent); border:none; border-radius:8px;
+    padding:10px 12px; cursor:pointer;
+  }
+  .gate-box button:hover{ background:var(--accent-strong); }
+  .gate-error{ font-size:12px; color:var(--critical); }
+</style>
+
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <div class="gate-title">TERRA BIOMASSA</div>
+    <div class="gate-sub">Acesso restrito &middot; informe a senha para continuar</div>
+    <input type="password" id="gate-pass" placeholder="Senha" autocomplete="current-password">
+    <button id="gate-btn" type="button">Entrar</button>
+    <div class="gate-error" id="gate-error" style="display:none;">Senha incorreta.</div>
+  </div>
+</div>
+
+<div class="app">
+  <div class="scrim" id="scrim"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 L4 11 L12 4 L20 11 L20 20 Z"/><path d="M9 20 V14 H15 V20"/></svg>
+      </div>
+      <div class="brand-text">
+        <div class="name">TERRA BIOMASSA</div>
+        <div class="sub">Cavaco de madeira &middot; controle logístico</div>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <div class="nav-label">Painel</div>
+      <button class="nav-item active" data-view="visao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Visão geral</button>
+      <button class="nav-item" data-view="operacao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 16 V7a1 1 0 0 1 1-1h9v10"/><path d="M13 10h5l3 3v3h-8z"/><circle cx="7.5" cy="18.5" r="1.8"/><circle cx="17.5" cy="18.5" r="1.8"/></svg>Operação &amp; embarques</button>
+      <button class="nav-item" data-view="financeiro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Financeiro &amp; frete</button>
+      <button class="nav-item" data-view="contratos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v4h4"/><path d="M9.5 12h6M9.5 15.5h6M9.5 8.5h3"/></svg>Contratos &amp; clientes</button>
+      <button class="nav-item" data-view="transporte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M3 6h9v9M3 6v9h3"/><path d="M12 9h4l3 3v3h-2"/></svg>Transporte &amp; motoristas</button>
+      <button class="nav-item" data-view="auditoria"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9.3 12.2l1.8 1.8 3.6-3.8"/></svg>Auditoria &amp; controle</button>
+    </nav>
+
+    <div class="filters">
+      <div class="nav-label" style="padding-left:2px;">Filtros globais</div>
+      <div class="field-row">
+        <div class="field"><label for="f-de">Período — de</label><input type="date" id="f-de"></div>
+        <div class="field"><label for="f-ate">até</label><input type="date" id="f-ate"></div>
+      </div>
+      <div class="field">
+        <label for="f-cliente">Cliente</label>
+        <select id="f-cliente"><option value="">Todos</option></select>
+      </div>
+      <div class="field">
+        <label for="f-contrato">Contrato</label>
+        <select id="f-contrato"><option value="">Todos</option></select>
+      </div>
+      <div class="field">
+        <label for="f-transportadora">Transportadora</label>
+        <select id="f-transportadora"><option value="">Todas</option></select>
+      </div>
+      <div class="field">
+        <label for="f-status">Status de conciliação</label>
+        <select id="f-status"><option value="">Todos</option></select>
+      </div>
+      <button class="reset-btn" id="reset-filters">Limpar filtros</button>
+      <div class="filter-hint" id="filter-count"></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button class="menu-btn" id="menu-btn" aria-label="Abrir menu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div>
+          <h1 id="view-title">Visão geral</h1>
+          <div class="meta" id="view-sub">Terra Biomassa Indústria e Comércio Ltda &middot; biomassa — cavaco de madeira</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="badge-period" id="period-badge">—</span>
+        <span>Emitido em 16/09/2026</span>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ===== VISÃO GERAL ===== -->
+      <section class="view active" id="view-visao">
+        <div class="kpi-grid" id="kpi-visao"></div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head">
+              <div><h3>Volume embarcado por dia</h3><div class="desc">Soma do volume embarcado (m³) na origem, por data de carregamento</div></div>
+            </div>
+            <div class="chart-wrap" style="height:260px;"><canvas id="chart-volume-dia"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3>Status de conciliação</h3><div class="desc">Embarques por situação de faturamento x volume aceito</div></div></div>
+            <div class="chart-wrap" style="height:260px;"><canvas id="chart-conciliacao"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><div><h3>Receita faturada por cliente</h3><div class="desc">NF-e + complemento, no período filtrado</div></div></div>
+            <div class="chart-wrap" style="height:180px;"><canvas id="chart-receita-cliente"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3>Execução por contrato</h3><div class="desc">Volume líquido aceito acumulado sobre o volume contratado</div></div></div>
+            <div id="meter-contratos"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== OPERAÇÃO ===== -->
+      <section class="view" id="view-operacao">
+        <div class="kpi-grid" id="kpi-operacao"></div>
+
+        <div class="card">
+          <div class="card-head">
+            <div><h3>Diferença de cubagem por embarque</h3><div class="desc">Volume líquido aceito no destino menos volume embarcado na origem — fora da tolerância em vermelho</div></div>
+            <div class="card-legend">
+              <span class="legend-item"><span class="legend-dot" style="background:var(--good)"></span>dentro da tolerância</span>
+              <span class="legend-item"><span class="legend-dot" style="background:var(--critical)"></span>fora da tolerância</span>
+            </div>
+          </div>
+          <div class="chart-wrap" style="height:240px;"><canvas id="chart-cubagem"></canvas></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><h3>Embarques no período filtrado</h3><div class="desc">Ordenado por data de carregamento, mais recentes primeiro</div></div></div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr>
+                <th>Nº</th><th>Data</th><th>Cliente</th><th>Local de descarga</th>
+                <th class="num">Vol. embarcado (m³)</th><th class="num">Vol. líq. aceito (m³)</th>
+                <th class="num">Dif. cubagem (%)</th><th>Conciliação</th><th>Ocorrências</th>
+              </tr></thead>
+              <tbody id="tbl-embarques"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== FINANCEIRO ===== -->
+      <section class="view" id="view-financeiro">
+        <div class="kpi-grid" id="kpi-financeiro"></div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><div><h3>Frete apurado x pago à transportadora</h3><div class="desc">Por embarque, na ordem de carregamento</div></div></div>
+            <div class="chart-wrap" style="height:240px;"><canvas id="chart-frete"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3>Situação de pagamento</h3><div class="desc">Frete devido à transportadora, por status</div></div></div>
+            <div class="chart-wrap" style="height:240px;"><canvas id="chart-pgto-transp"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><h3>Resultado por contrato</h3><div class="desc">Receita faturada, frete devido e margem de contribuição — no acumulado do contrato</div></div></div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr>
+                <th>Contrato</th><th>Cliente</th><th class="num">Receita faturada</th>
+                <th class="num">Frete devido</th><th class="num">Margem</th><th class="num">Margem / m³</th><th>Status</th>
+              </tr></thead>
+              <tbody id="tbl-financeiro-contratos"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== CONTRATOS & CLIENTES ===== -->
+      <section class="view" id="view-contratos">
+        <div class="kpi-grid" id="kpi-contratos"></div>
+
+        <div class="card">
+          <div class="card-head"><div><h3>Cadastro de contratos</h3><div class="desc">Volume, preço e vigência por negociação</div></div></div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr>
+                <th>Contrato</th><th>Cliente</th><th>Produto</th><th class="num">Volume contratado (m³)</th>
+                <th class="num">Preço (R$/m³)</th><th>Início</th><th>Fim</th><th>Condição pgto.</th><th>Status</th>
+              </tr></thead>
+              <tbody id="tbl-contratos"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><h3>Clientes e locais de descarga</h3></div></div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Cliente</th><th>Local de descarga</th><th>Cidade / UF</th><th>Exige agendamento</th></tr></thead>
+              <tbody id="tbl-clientes"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== TRANSPORTE & MOTORISTAS ===== -->
+      <section class="view" id="view-transporte">
+        <div class="kpi-grid" id="kpi-transporte"></div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><div><h3>Saldo a pagar por motorista</h3><div class="desc">Frete sem CT-e, líquido de adiantamentos e combustível</div></div></div>
+            <div class="chart-wrap" style="height:240px;"><canvas id="chart-motoristas"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3>Transportadoras cadastradas</h3></div></div>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Transportadora</th><th>CNPJ</th><th>Prazo de pagamento</th><th>Status</th></tr></thead>
+                <tbody id="tbl-transportadoras"></tbody>
+              </table>
+            </div>
+            <div class="card-head" style="margin-top:14px;"><div><h3>Tarifas de frete</h3><div class="desc">Por rota — vale a vigência mais recente</div></div></div>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Local de descarga</th><th class="num">Tarifa cheia</th><th class="num">Tarifa CT-e</th><th>Vigência</th><th>Situação</th></tr></thead>
+                <tbody id="tbl-tarifas"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><h3>Motoristas e conjuntos</h3></div></div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr>
+                <th>Motorista</th><th>Placa cavalo</th><th class="num">Entregas</th>
+                <th class="num">Crédito</th><th class="num">Combustível</th><th class="num">Saldo a pagar</th><th>Situação</th>
+              </tr></thead>
+              <tbody id="tbl-motoristas"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== AUDITORIA ===== -->
+      <section class="view" id="view-auditoria">
+        <div class="kpi-grid" id="kpi-auditoria"></div>
+
+        <div class="card">
+          <div class="card-head">
+            <div><h3>Ocorrências por tipo de verificação</h3><div class="desc">Contagem de embarques sinalizados em cada checagem automática</div></div>
+            <div class="card-legend">
+              <span class="legend-item"><span class="legend-dot" style="background:var(--good)"></span>conforme</span>
+              <span class="legend-item"><span class="legend-dot" style="background:var(--critical)"></span>tratar</span>
+            </div>
+          </div>
+          <div class="chart-wrap" style="height:420px;"><canvas id="chart-auditoria"></canvas></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><h3>Embarques com pendências</h3><div class="desc">Dentro do período filtrado, ordenado por nº de ocorrências</div></div></div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Nº</th><th>Data</th><th>Cliente</th><th class="num">Ocorrências</th><th>Status do ciclo</th></tr></thead>
+              <tbody id="tbl-auditoria"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div>
+    <footer class="app-footer">Fonte: controle interno Terra Biomassa (planilha operacional) &middot; dados de 01–16/09/2026 &middot; painel gerado para uso interno.</footer>
+  </div>
+</div>
+
+<script>
+const DATA = {"meta":{"empresa":"TERRA BIOMASSA INDUSTRIA E COMERCIO LTDA","produto":"BIOMASSA - CAVACO DE MADEIRA","emissao":"2026-09-16","periodoPainelDe":"2026-09-07","periodoPainelAte":"2026-09-12"},"embarques":[{"num":1,"contrato":"CA 67323282_2026_JBS","cliente":"JBS S/A","local":"JBS S/A - DIAMANTINO/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"RUBENS","dataCarreg":"2026-09-01","dataDescarga":"2026-09-02","volProg":185,"volEmb":185,"volNf":185,"volDescarregado":198.045,"volLiquido":198.05,"difCubM3":-13.05,"difCubPct":-0.0705,"volComplemento":null,"valorNf":24050,"valorComplemento":null,"receitaTotal":24050,"valorAFaturar":1696.5,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":6535.65,"valorCte":6105,"aPagarTransp":6105,"valorPagoTransp":6105,"statusPgtoTransp":"PAGO","creditoMotorista":430.65,"saldoMotorista":430.65,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":130},{"num":2,"contrato":"CA 67323282_2026_JBS","cliente":"JBS S/A","local":"JBS S/A - DIAMANTINO/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"RUBENS","dataCarreg":"2026-09-02","dataDescarga":"2026-09-03","volProg":185,"volEmb":185,"volNf":185,"volDescarregado":192.578,"volLiquido":192.58,"difCubM3":-7.58,"difCubPct":-0.041,"volComplemento":null,"valorNf":24050,"valorComplemento":null,"receitaTotal":24050,"valorAFaturar":985.4,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":6355.14,"valorCte":6105,"aPagarTransp":6105,"valorPagoTransp":6105,"statusPgtoTransp":"PAGO","creditoMotorista":250.14,"saldoMotorista":250.14,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":130},{"num":3,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-01","dataDescarga":"2026-09-02","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":124.48,"volLiquido":124.48,"difCubM3":-4.48,"difCubPct":-0.0373,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":528.64,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2614.08,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":2520,"statusPgtoTransp":"PAGO","creditoMotorista":94.08,"saldoMotorista":94.08,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":4,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"MATEUS","dataCarreg":"2026-09-02","dataDescarga":"2026-09-02","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":124.12,"volLiquido":124.12,"difCubM3":-4.12,"difCubPct":-0.0343,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":486.16,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2606.52,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":2520,"statusPgtoTransp":"PAGO","creditoMotorista":86.52,"saldoMotorista":86.52,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":5,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-02","dataDescarga":"2026-09-02","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":122.85,"volLiquido":122.85,"difCubM3":-2.85,"difCubPct":-0.0238,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":336.3,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2579.85,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":2520,"statusPgtoTransp":"PAGO","creditoMotorista":59.85,"saldoMotorista":59.85,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":6,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"MATEUS","dataCarreg":"2026-09-03","dataDescarga":"2026-09-04","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":121.87,"volLiquido":121.87,"difCubM3":-1.87,"difCubPct":-0.0156,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":220.66,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2559.27,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":2520,"statusPgtoTransp":"PAGO","creditoMotorista":39.27,"saldoMotorista":39.27,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":7,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"MATEUS","dataCarreg":"2026-09-02","dataDescarga":"2026-09-03","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":122.43,"volLiquido":122.43,"difCubM3":-2.43,"difCubPct":-0.0203,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":286.74,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2571.03,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":2520,"statusPgtoTransp":"PAGO","creditoMotorista":51.03,"saldoMotorista":51.03,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":8,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-03","dataDescarga":"2026-09-03","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":127.09,"volLiquido":127.09,"difCubM3":-7.09,"difCubPct":-0.0591,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":836.62,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2668.89,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":2520,"statusPgtoTransp":"PAGO","creditoMotorista":148.89,"saldoMotorista":148.89,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":9,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-03","dataDescarga":"2026-09-04","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":125.68,"volLiquido":125.68,"difCubM3":-5.68,"difCubPct":-0.0473,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":670.24,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2639.28,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":2520,"statusPgtoTransp":"PAGO","creditoMotorista":119.28,"saldoMotorista":119.28,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":10,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"RUBENS","dataCarreg":"2026-09-03","dataDescarga":"2026-09-04","volProg":190,"volEmb":190,"volNf":190,"volDescarregado":190,"volLiquido":190,"difCubM3":0,"difCubPct":0,"volComplemento":null,"valorNf":22420,"valorComplemento":null,"receitaTotal":22420,"valorAFaturar":0,"statusConciliacao":"CONCILIADO","statusDescarga":"CONFORME","statusCiclo":"CICLO CONCLUÍDO","freteApurado":3990,"valorCte":3990,"aPagarTransp":3990,"valorPagoTransp":3990,"statusPgtoTransp":"PAGO","creditoMotorista":0,"saldoMotorista":0,"statusPgtoMotorista":"SEM VALOR A PAGAR","pendencias":0,"ocorrencias":0,"precoContratado":118},{"num":11,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"MATEUS","dataCarreg":"2026-09-04","dataDescarga":"2026-09-04","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":123.55,"volLiquido":123.55,"difCubM3":-3.55,"difCubPct":-0.0296,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":418.9,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2594.55,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":2520,"statusPgtoTransp":"PAGO","creditoMotorista":74.55,"saldoMotorista":74.55,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":12,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-04","dataDescarga":"2026-09-04","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":123.13,"volLiquido":123.13,"difCubM3":-3.13,"difCubPct":-0.0261,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":369.34,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2585.73,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":2520,"statusPgtoTransp":"PAGO","creditoMotorista":65.73,"saldoMotorista":65.73,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":13,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-04","dataDescarga":"2026-09-05","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":127.38,"volLiquido":127.38,"difCubM3":-7.38,"difCubPct":-0.0615,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":870.84,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2674.98,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":2520,"statusPgtoTransp":"PAGO","creditoMotorista":154.98,"saldoMotorista":154.98,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":14,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"RUBENS","dataCarreg":"2026-09-04","dataDescarga":"2026-09-05","volProg":120,"volEmb":190,"volNf":190,"volDescarregado":187.23,"volLiquido":187.23,"difCubM3":2.77,"difCubPct":0.0146,"volComplemento":null,"valorNf":22420,"valorComplemento":null,"receitaTotal":22420,"valorAFaturar":-326.86,"statusConciliacao":"FATURADO A MAIOR","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":3931.83,"valorCte":3990,"aPagarTransp":3990,"valorPagoTransp":3990,"statusPgtoTransp":"PAGO","creditoMotorista":0,"saldoMotorista":0,"statusPgtoMotorista":"SEM VALOR A PAGAR","pendencias":3,"ocorrencias":3,"precoContratado":118},{"num":15,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"MATEUS","dataCarreg":"2026-09-04","dataDescarga":"2026-09-08","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":126.56,"volLiquido":126.56,"difCubM3":-6.56,"difCubPct":-0.0547,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":774.08,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2657.76,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":2520,"statusPgtoTransp":"PAGO","creditoMotorista":137.76,"saldoMotorista":137.76,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":16,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-07","dataDescarga":"2026-09-08","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":124.73,"volLiquido":124.73,"difCubM3":-4.73,"difCubPct":-0.0394,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":558.14,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2619.33,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":99.33,"saldoMotorista":99.33,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":17,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"RUBENS","dataCarreg":"2026-09-07","dataDescarga":"2026-09-08","volProg":190,"volEmb":190,"volNf":190,"volDescarregado":178.58,"volLiquido":178.58,"difCubM3":11.42,"difCubPct":0.0601,"volComplemento":null,"valorNf":22420,"valorComplemento":null,"receitaTotal":22420,"valorAFaturar":-1347.56,"statusConciliacao":"FATURADO A MAIOR","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":3750.18,"valorCte":3990,"aPagarTransp":3990,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":0,"saldoMotorista":0,"statusPgtoMotorista":"SEM VALOR A PAGAR","pendencias":3,"ocorrencias":3,"precoContratado":118},{"num":18,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"MATEUS","dataCarreg":"2026-09-08","dataDescarga":"2026-09-08","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":121.52,"volLiquido":121.52,"difCubM3":-1.52,"difCubPct":-0.0127,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":179.36,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2551.92,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":31.92,"saldoMotorista":31.92,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":19,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"MATEUS","dataCarreg":"2026-09-09","dataDescarga":"2026-09-09","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":122.43,"volLiquido":122.43,"difCubM3":-2.43,"difCubPct":-0.0203,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":286.74,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2571.03,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":51.03,"saldoMotorista":51.03,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":20,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-09","dataDescarga":"2026-09-09","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":123.65,"volLiquido":123.65,"difCubM3":-3.65,"difCubPct":-0.0304,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":430.7,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2596.65,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":76.65,"saldoMotorista":76.65,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":21,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"MATEUS","dataCarreg":"2026-09-09","dataDescarga":"2026-09-10","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":121.77,"volLiquido":121.77,"difCubM3":-1.77,"difCubPct":-0.0148,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":208.86,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2557.17,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":37.17,"saldoMotorista":37.17,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":22,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-09","dataDescarga":"2026-09-10","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":123.32,"volLiquido":123.32,"difCubM3":-3.32,"difCubPct":-0.0277,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":391.76,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2589.72,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":69.72,"saldoMotorista":69.72,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":23,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"MATEUS","dataCarreg":"2026-09-10","dataDescarga":"2026-09-10","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":124.11,"volLiquido":124.11,"difCubM3":-4.11,"difCubPct":-0.0343,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":484.98,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2606.31,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":86.31,"saldoMotorista":86.31,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":24,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-10","dataDescarga":"2026-09-10","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":125.75,"volLiquido":125.75,"difCubM3":-5.75,"difCubPct":-0.0479,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":678.5,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2640.75,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":120.75,"saldoMotorista":120.75,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":25,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-10","dataDescarga":"2026-09-11","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":124.8,"volLiquido":124.8,"difCubM3":-4.8,"difCubPct":-0.04,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":566.4,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2620.8,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":100.8,"saldoMotorista":100.8,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":26,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"MATEUS","dataCarreg":"2026-09-10","dataDescarga":"2026-09-11","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":122.58,"volLiquido":122.58,"difCubM3":-2.58,"difCubPct":-0.0215,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":304.44,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2574.18,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":54.18,"saldoMotorista":54.18,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":27,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"RUBENS","dataCarreg":"2026-09-11","dataDescarga":"2026-09-12","volProg":178,"volEmb":178,"volNf":178,"volDescarregado":180.9,"volLiquido":180.9,"difCubM3":-2.9,"difCubPct":-0.0163,"volComplemento":null,"valorNf":21004,"valorComplemento":null,"receitaTotal":21004,"valorAFaturar":342.2,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":3798.9,"valorCte":3738,"aPagarTransp":3738,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":60.9,"saldoMotorista":60.9,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":28,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"MATEUS","dataCarreg":"2026-09-11","dataDescarga":"2026-09-12","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":125.54,"volLiquido":125.54,"difCubM3":-5.54,"difCubPct":-0.0462,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":653.72,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2636.34,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":116.34,"saldoMotorista":116.34,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":29,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-11","dataDescarga":"2026-09-12","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":127.35,"volLiquido":127.35,"difCubM3":-7.35,"difCubPct":-0.0612,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":867.3,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2674.35,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":154.35,"saldoMotorista":154.35,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":30,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-13","dataDescarga":"2026-09-14","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":125.48,"volLiquido":125.48,"difCubM3":-5.48,"difCubPct":-0.0457,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":646.64,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2635.08,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":115.08,"saldoMotorista":115.08,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":31,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"EVARISTO","dataCarreg":"2026-09-13","dataDescarga":"2026-09-14","volProg":105,"volEmb":105,"volNf":105,"volDescarregado":112.5,"volLiquido":112.5,"difCubM3":-7.5,"difCubPct":-0.0714,"volComplemento":null,"valorNf":12390,"valorComplemento":null,"receitaTotal":12390,"valorAFaturar":885,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2362.5,"valorCte":2205,"aPagarTransp":2205,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":157.5,"saldoMotorista":157.5,"statusPgtoMotorista":"A PAGAR","pendencias":2,"ocorrencias":2,"precoContratado":118},{"num":32,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-14","dataDescarga":"2026-09-14","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":126.89,"volLiquido":126.89,"difCubM3":-6.89,"difCubPct":-0.0574,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":813.02,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2791.58,"valorCte":2520,"aPagarTransp":2520,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":271.58,"saldoMotorista":271.58,"statusPgtoMotorista":"A PAGAR","pendencias":3,"ocorrencias":3,"precoContratado":118},{"num":33,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"EVARISTO","dataCarreg":"2026-09-14","dataDescarga":"2026-09-15","volProg":110,"volEmb":110,"volNf":110,"volDescarregado":112.66,"volLiquido":112.66,"difCubM3":-2.66,"difCubPct":-0.0242,"volComplemento":null,"valorNf":12980,"valorComplemento":null,"receitaTotal":12980,"valorAFaturar":313.88,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2478.52,"valorCte":2310,"aPagarTransp":2310,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":168.52,"saldoMotorista":168.52,"statusPgtoMotorista":"A PAGAR","pendencias":3,"ocorrencias":3,"precoContratado":118},{"num":34,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"CLAUDIONOR","dataCarreg":"2026-09-14","dataDescarga":"2026-09-15","volProg":108,"volEmb":108,"volNf":108,"volDescarregado":108.43,"volLiquido":108.43,"difCubM3":-0.43,"difCubPct":-0.004,"volComplemento":null,"valorNf":12744,"valorComplemento":null,"receitaTotal":12744,"valorAFaturar":50.74,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2385.46,"valorCte":1944,"aPagarTransp":1944,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":441.46,"saldoMotorista":441.46,"statusPgtoMotorista":"A PAGAR","pendencias":3,"ocorrencias":3,"precoContratado":118},{"num":35,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"RUBENS","dataCarreg":"2026-09-14","dataDescarga":"2026-09-15","volProg":178,"volEmb":178,"volNf":178,"volDescarregado":180.9,"volLiquido":180.9,"difCubM3":-2.9,"difCubPct":-0.0163,"volComplemento":null,"valorNf":21004,"valorComplemento":null,"receitaTotal":21004,"valorAFaturar":342.2,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":3979.8,"valorCte":4094,"aPagarTransp":4094,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":0,"saldoMotorista":0,"statusPgtoMotorista":"SEM VALOR A PAGAR","pendencias":4,"ocorrencias":4,"precoContratado":118},{"num":36,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-14","dataDescarga":"2026-09-15","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":127.25,"volLiquido":127.25,"difCubM3":-7.25,"difCubPct":-0.0604,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":855.5,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2799.5,"valorCte":2760,"aPagarTransp":2760,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":39.5,"saldoMotorista":39.5,"statusPgtoMotorista":"A PAGAR","pendencias":3,"ocorrencias":3,"precoContratado":118},{"num":37,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-15","dataDescarga":"2026-09-15","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":125.52,"volLiquido":125.52,"difCubM3":-5.52,"difCubPct":-0.046,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":651.36,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2761.44,"valorCte":2760,"aPagarTransp":2760,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":1.44,"saldoMotorista":1.44,"statusPgtoMotorista":"A PAGAR","pendencias":3,"ocorrencias":3,"precoContratado":118},{"num":38,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"EVARISTO","dataCarreg":"2026-09-15","dataDescarga":"2026-09-15","volProg":110,"volEmb":110,"volNf":110,"volDescarregado":110.85,"volLiquido":110.85,"difCubM3":-0.85,"difCubPct":-0.0077,"volComplemento":null,"valorNf":12980,"valorComplemento":null,"receitaTotal":12980,"valorAFaturar":100.3,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2438.7,"valorCte":2530,"aPagarTransp":2530,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":0,"saldoMotorista":0,"statusPgtoMotorista":"SEM VALOR A PAGAR","pendencias":5,"ocorrencias":5,"precoContratado":118},{"num":39,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"SAMUEL","dataCarreg":"2026-09-15","dataDescarga":"2026-09-16","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":124.14,"volLiquido":124.14,"difCubM3":-4.14,"difCubPct":-0.0345,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":488.52,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2731.08,"valorCte":2760,"aPagarTransp":2760,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":0,"saldoMotorista":0,"statusPgtoMotorista":"SEM VALOR A PAGAR","pendencias":4,"ocorrencias":4,"precoContratado":118},{"num":40,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"RUBENS","dataCarreg":"2026-09-15","dataDescarga":"2026-09-16","volProg":178,"volEmb":178,"volNf":178,"volDescarregado":179.3,"volLiquido":179.3,"difCubM3":-1.3,"difCubPct":-0.0073,"volComplemento":null,"valorNf":21004,"valorComplemento":null,"receitaTotal":21004,"valorAFaturar":153.4,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":3944.6,"valorCte":4094,"aPagarTransp":4094,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":0,"saldoMotorista":0,"statusPgtoMotorista":"SEM VALOR A PAGAR","pendencias":4,"ocorrencias":4,"precoContratado":118},{"num":41,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"CLAUDIONOR","dataCarreg":"2026-09-15","dataDescarga":"2026-09-16","volProg":108,"volEmb":108,"volNf":108,"volDescarregado":108.74,"volLiquido":108.74,"difCubM3":-0.74,"difCubPct":-0.0069,"volComplemento":null,"valorNf":12744,"valorComplemento":null,"receitaTotal":12744,"valorAFaturar":87.32,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2392.28,"valorCte":1944,"aPagarTransp":1944,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":448.28,"saldoMotorista":448.28,"statusPgtoMotorista":"A PAGAR","pendencias":3,"ocorrencias":3,"precoContratado":118},{"num":42,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"EVARISTO","dataCarreg":"2026-09-15","dataDescarga":"2026-09-16","volProg":110,"volEmb":110,"volNf":110,"volDescarregado":111.04,"volLiquido":111.04,"difCubM3":-1.04,"difCubPct":-0.0095,"volComplemento":null,"valorNf":12980,"valorComplemento":null,"receitaTotal":12980,"valorAFaturar":122.72,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2442.88,"valorCte":2530,"aPagarTransp":2530,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":0,"saldoMotorista":0,"statusPgtoMotorista":"SEM VALOR A PAGAR","pendencias":4,"ocorrencias":4,"precoContratado":118},{"num":43,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-15","dataDescarga":"2026-09-16","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":126.33,"volLiquido":126.33,"difCubM3":-6.33,"difCubPct":-0.0527,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":746.94,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2779.26,"valorCte":2760,"aPagarTransp":2760,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":19.26,"saldoMotorista":19.26,"statusPgtoMotorista":"A PAGAR","pendencias":3,"ocorrencias":3,"precoContratado":118},{"num":44,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"SAMUEL","dataCarreg":"2026-09-16","dataDescarga":"2026-09-16","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":124.53,"volLiquido":124.53,"difCubM3":-4.53,"difCubPct":-0.0377,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":534.54,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2739.66,"valorCte":2760,"aPagarTransp":2760,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":0,"saldoMotorista":0,"statusPgtoMotorista":"SEM VALOR A PAGAR","pendencias":4,"ocorrencias":4,"precoContratado":118},{"num":45,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"CLAUDIONOR","dataCarreg":"2026-09-16","dataDescarga":"2026-09-16","volProg":108,"volEmb":108,"volNf":108,"volDescarregado":107.68,"volLiquido":107.68,"difCubM3":0.32,"difCubPct":0.003,"volComplemento":null,"valorNf":12744,"valorComplemento":null,"receitaTotal":12744,"valorAFaturar":-37.76,"statusConciliacao":"FATURADO A MAIOR","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2368.96,"valorCte":1944,"aPagarTransp":1944,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":424.96,"saldoMotorista":424.96,"statusPgtoMotorista":"A PAGAR","pendencias":3,"ocorrencias":3,"precoContratado":118},{"num":46,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"JUCIVALDO","dataCarreg":"2026-09-16","dataDescarga":"2026-09-16","volProg":120,"volEmb":120,"volNf":120,"volDescarregado":125.84,"volLiquido":125.84,"difCubM3":-5.84,"difCubPct":-0.0487,"volComplemento":null,"valorNf":14160,"valorComplemento":null,"receitaTotal":14160,"valorAFaturar":689.12,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":2768.48,"valorCte":2160,"aPagarTransp":2160,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":608.48,"saldoMotorista":608.48,"statusPgtoMotorista":"A PAGAR","pendencias":3,"ocorrencias":3,"precoContratado":118},{"num":47,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"RUBENS","dataCarreg":"2026-09-16","dataDescarga":"2026-09-16","volProg":178,"volEmb":178,"volNf":178,"volDescarregado":180.3,"volLiquido":180.3,"difCubM3":-2.3,"difCubPct":-0.0129,"volComplemento":null,"valorNf":21004,"valorComplemento":null,"receitaTotal":21004,"valorAFaturar":271.4,"statusConciliacao":"FATURAR COMPLEMENTO","statusDescarga":"DIVERGÊNCIA DE CUBAGEM","statusCiclo":"AGUARDA CONCILIAÇÃO","freteApurado":3966.6,"valorCte":3204,"aPagarTransp":3204,"valorPagoTransp":null,"statusPgtoTransp":"A PAGAR","creditoMotorista":762.6,"saldoMotorista":762.6,"statusPgtoMotorista":"A PAGAR","pendencias":3,"ocorrencias":3,"precoContratado":118},{"num":48,"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","motorista":"EVARISTO","dataCarreg":"2026-09-16","dataDescarga":null,"volProg":110,"volEmb":110,"volNf":110,"volDescarregado":null,"volLiquido":null,"difCubM3":null,"difCubPct":null,"volComplemento":null,"valorNf":12980,"valorComplemento":null,"receitaTotal":12980,"valorAFaturar":null,"statusConciliacao":"AGUARDA DESCARGA","statusDescarga":"AGUARDA DESCARGA","statusCiclo":"EM TRÂNSITO","freteApurado":null,"valorCte":null,"aPagarTransp":null,"valorPagoTransp":null,"statusPgtoTransp":"AGUARDA CT-E","creditoMotorista":null,"saldoMotorista":null,"statusPgtoMotorista":"AGUARDA APURAÇÃO","pendencias":2,"ocorrencias":2,"precoContratado":118}],"contratos":[{"contrato":"CA 67323282_2026_JBS","cliente":"JBS S/A","produto":"CAVACO","volumeContratado":2000,"preco":130,"inicioVigencia":"2026-09-01","fimVigencia":"2026-09-30","toleranciaPct":0,"status":"ATIVO","condicaoPagamento":"30 DIAS APÓS A ENTREGA"},{"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","produto":"CAVACO","volumeContratado":16000,"preco":118,"inicioVigencia":"2026-09-01","fimVigencia":"2026-09-30","toleranciaPct":0,"status":"ATIVO","condicaoPagamento":"30 DIAS APÓS A ENTREGA"}],"posicaoContrato":[{"contrato":"CA 67323282_2026_JBS","cliente":"JBS S/A","volumeContratado":2000,"volumeLiquido":390.63,"saldoEntregar":1609.37,"pctExecutado":0.1953,"receitaFaturada":48100,"valorAFaturar":2681.9,"freteDevido":12890.79,"margem":35209.21,"margemUnitaria":90.13,"pendencias":4,"status":"EM EXECUÇÃO"},{"contrato":"CA 811_2026_RRP","cliente":"RRP ENERGIA LTDA","volumeContratado":16000,"volumeLiquido":5911.78,"saldoEntregar":10088.22,"pctExecutado":0.3695,"receitaFaturada":692778,"valorAFaturar":17792.04,"freteDevido":126227.78,"margem":566550.22,"margemUnitaria":95.83,"pendencias":115,"status":"EM EXECUÇÃO"}],"transportadoras":[{"nome":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","cnpj":"53.063.953/0001-65","prazoPagamento":"15 DIAS APÓS O COMPROVANTE - AS TERÇA-FEIRA","status":"ATIVO"}],"tarifasFrete":[{"transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","local":"JBS S/A - DIAMANTINO/MT","tarifaCheia":null,"tarifaCte":33,"tarifaMotorista":32,"vigencia":"2026-08-01","situacao":"VIGENTE"},{"transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","tarifaCheia":null,"tarifaCte":21,"tarifaMotorista":20,"vigencia":"2026-08-01","situacao":"SUBSTITUÍDA"},{"transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","local":"RRP ENERGIA LTDA - TAPURAH/MT","tarifaCheia":22,"tarifaCte":17,"tarifaMotorista":22,"vigencia":"2026-09-14","situacao":"VIGENTE"}],"motoristas":[{"nome":"JUCIVALDO","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","placaCavalo":"RYB7G18","placaCarreta":"SQM1H60","cubagem":120,"status":"ATIVO","entregas":6,"credito":621.6,"adiantamentos":0,"combustivel":0,"liquido":621.6,"valorPago":0,"saldoAPagar":621.6,"debitoNaoCompensado":0,"situacaoFatura":"A PAGAR","saldoAberto":2319.75},{"nome":"MATEUS","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","placaCavalo":"MMI5E43","placaCarreta":"RYF6F84","cubagem":120,"status":"ATIVO","entregas":6,"credito":376.95,"adiantamentos":0,"combustivel":0,"liquido":376.95,"valorPago":0,"saldoAPagar":376.95,"debitoNaoCompensado":0,"situacaoFatura":"A PAGAR","saldoAberto":766.08},{"nome":"RUBENS","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","placaCavalo":"SQF4I17","placaCarreta":"SQE6C01; SQE6C11; SQE6C21","cubagem":178,"status":"ATIVO","entregas":2,"credito":60.9,"adiantamentos":0,"combustivel":0,"liquido":60.9,"valorPago":0,"saldoAPagar":60.9,"debitoNaoCompensado":0,"situacaoFatura":"A PAGAR","saldoAberto":1504.29},{"nome":"EVARISTO","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","placaCavalo":"QHC2H45","placaCarreta":"RCN3I93","cubagem":110,"status":"ATIVO","entregas":0,"credito":0,"adiantamentos":0,"combustivel":0,"liquido":0,"valorPago":0,"saldoAPagar":0,"debitoNaoCompensado":0,"situacaoFatura":"SEM VALOR A PAGAR","saldoAberto":326.02},{"nome":"CLAUDIONOR","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","placaCavalo":"BAN3G20","placaCarreta":"MKB5D55","cubagem":108,"status":"ATIVO","entregas":0,"credito":0,"adiantamentos":0,"combustivel":0,"liquido":0,"valorPago":0,"saldoAPagar":0,"debitoNaoCompensado":0,"situacaoFatura":"SEM VALOR A PAGAR","saldoAberto":1314.7},{"nome":"SAMUEL","transportadora":"PRIMAVERA TRANSPORTES E LOGISTICA LTDA","placaCavalo":"SBY5F35","placaCarreta":"SPK5H94","cubagem":null,"status":null,"entregas":0,"credito":0,"adiantamentos":0,"combustivel":0,"liquido":0,"valorPago":0,"saldoAPagar":0,"debitoNaoCompensado":0,"situacaoFatura":"SEM VALOR A PAGAR","saldoAberto":0}],"auditoriaResumo":[{"verificacao":"NF-E DE VENDA DUPLICADA","ocorrencias":2,"situacao":"TRATAR"},{"verificacao":"ROMANEIO DUPLICADO","ocorrencias":0,"situacao":"CONFORME"},{"verificacao":"CT-E DUPLICADO","ocorrencias":0,"situacao":"CONFORME"},{"verificacao":"GUIA FLORESTAL","ocorrencias":0,"situacao":"CONFORME"},{"verificacao":"VOLUME NF ≠ EMBARCADO","ocorrencias":0,"situacao":"CONFORME"},{"verificacao":"PREÇO NF ≠ CONTRATO","ocorrencias":0,"situacao":"CONFORME"},{"verificacao":"COMPROVANTE DE DESCARGA","ocorrencias":0,"situacao":"CONFORME"},{"verificacao":"DIFERENÇA DE CUBAGEM","ocorrencias":46,"situacao":"TRATAR"},{"verificacao":"CONCILIAÇÃO DE FATURAMENTO","ocorrencias":46,"situacao":"TRATAR"},{"verificacao":"DOCUMENTO DE TRANSPORTE","ocorrencias":1,"situacao":"TRATAR"},{"verificacao":"CT-E ACIMA DO FRETE APURADO","ocorrencias":8,"situacao":"TRATAR"},{"verificacao":"PAGAMENTO DE FRETE IRREGULAR","ocorrencias":0,"situacao":"CONFORME"},{"verificacao":"DATAS INCONSISTENTES","ocorrencias":0,"situacao":"CONFORME"},{"verificacao":"VOLUME DO CONTRATO","ocorrencias":0,"situacao":"CONFORME"},{"verificacao":"AGENDAMENTO","ocorrencias":0,"situacao":"CONFORME"},{"verificacao":"CT-E × TARIFA VIGENTE","ocorrencias":16,"situacao":"TRATAR"},{"verificacao":"ABASTECIMENTO (DADOS / PREÇO)","ocorrencias":0,"situacao":"CONFORME"},{"verificacao":"CONTROLE DE ABASTECIMENTO DUPLICADO","ocorrencias":0,"situacao":"CONFORME"},{"verificacao":"ABASTECIMENTOS AVULSOS COM PENDÊNCIA","ocorrencias":0,"situacao":"CONFORME"},{"verificacao":"TOTAL DE OCORRÊNCIAS","ocorrencias":119,"situacao":"EXISTEM PENDÊNCIAS"}],"clientesLocais":[{"local":"JBS S/A - DIAMANTINO/MT","cliente":"JBS S/A","cidadeUf":"DIAMANTINO/MT","exigeAgendamento":"NÃO"},{"local":"RRP ENERGIA LTDA - TAPURAH/MT","cliente":"RRP ENERGIA LTDA","cidadeUf":"TAPURAH/MT","exigeAgendamento":"SIM"}],"precosCombustivel":[{"vigencia":"2026-09-14","precoLitro":6.9,"combustivel":"DIESEL","situacao":"VIGENTE"}]};
+
+/* ---------------- helpers ---------------- */
+const fmtInt = n => (n==null || isNaN(n)) ? '—' : Math.round(n).toLocaleString('pt-BR');
+const fmtNum = (n,d=1) => (n==null || isNaN(n)) ? '—' : n.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtBRL = n => (n==null || isNaN(n)) ? '—' : n.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const fmtBRLc = n => (n==null || isNaN(n)) ? '—' : (Math.abs(n) >= 1000 ? (n/1000).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:1})+'K' : fmtNum(n,0));
+const fmtPct = (n,d=1) => (n==null || isNaN(n)) ? '—' : (n*100).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d})+'%';
+const fmtDate = s => { if(!s) return '—'; const [y,m,d]=s.split('-'); return `${d}/${m}/${y.slice(2)}`; };
+const sum = (arr,f) => arr.reduce((a,r)=>a + (f(r)||0), 0);
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+function statusPill(status){
+  const s = (status||'').toUpperCase();
+  const map = {
+    'CONFORME':'good','CONCILIADO':'good','VIGENTE':'good','ATIVO':'good','PAGO':'good','REALIZADO':'good','REGULAR':'good','SEM VALOR A PAGAR':'good',
+    'FATURAR COMPLEMENTO':'warning','A PAGAR':'warning','AGUARDA CT-E':'warning','AGUARDA APURAÇÃO':'warning','AGUARDA DESCARGA':'warning','AGUARDA CONCILIAÇÃO':'warning','EM EXECUÇÃO':'warning','SUBSTITUÍDA':'neutral','EM TRÂNSITO':'neutral',
+    'FATURADO A MAIOR':'serious','DIVERGÊNCIA DE CUBAGEM':'serious',
+    'TRATAR':'critical','NÃO EMITIDO':'critical',
+    'CICLO CONCLUÍDO':'good'
+  };
+  const kind = map[s] || 'neutral';
+  return `<span class="pill pill-${kind}"><span class="dot"></span>${status||'—'}</span>`;
+}
+
+/* ---------------- Chart.js global defaults ---------------- */
+function applyChartDefaults(){
+  Chart.defaults.font.family = "IBM Plex Sans, system-ui, sans-serif";
+  Chart.defaults.font.size = 11.5;
+  Chart.defaults.color = css('--text-secondary');
+  Chart.defaults.borderColor = css('--grid');
+  Chart.defaults.plugins.legend.labels.usePointStyle = true;
+  Chart.defaults.plugins.legend.labels.boxWidth = 8;
+  Chart.defaults.plugins.legend.labels.boxHeight = 8;
+  Chart.defaults.plugins.tooltip.backgroundColor = css('--surface');
+  Chart.defaults.plugins.tooltip.titleColor = css('--text-primary');
+  Chart.defaults.plugins.tooltip.bodyColor = css('--text-secondary');
+  Chart.defaults.plugins.tooltip.borderColor = css('--border-strong');
+  Chart.defaults.plugins.tooltip.borderWidth = 1;
+  Chart.defaults.plugins.tooltip.padding = 9;
+  Chart.defaults.plugins.tooltip.cornerRadius = 8;
+  Chart.defaults.plugins.tooltip.titleFont = {family:"IBM Plex Sans", weight:'600', size:11.5};
+  Chart.defaults.plugins.tooltip.bodyFont = {family:"IBM Plex Mono", size:11.5};
+  Chart.defaults.plugins.tooltip.displayColors = true;
+  Chart.defaults.plugins.tooltip.boxPadding = 4;
+}
+
+/* ---------------- state ---------------- */
+let charts = {};
+let currentRows = [];
+let currentView = 'visao';
+const chartsByView = {
+  visao: ['volumeDia','conciliacao','receitaCliente'],
+  operacao: ['cubagem'],
+  financeiro: ['frete','pgtoTransp'],
+  contratos: [],
+  transporte: ['motoristas'],
+  auditoria: ['auditoria'],
+};
+function destroyCharts(){ Object.values(charts).forEach(c=>c && c.destroy()); charts = {}; }
+function renderChartsForView(view, rows){
+  switch(view){
+    case 'visao': chartVolumeDia(rows); chartConciliacao(rows); chartReceitaCliente(rows); break;
+    case 'operacao': chartCubagem(rows); break;
+    case 'financeiro': chartFrete(rows); chartPgtoTransp(rows); break;
+    case 'transporte': chartMotoristas(); break;
+    case 'auditoria': chartAuditoria(); break;
+  }
+}
+
+const allDates = DATA.embarques.map(e=>e.dataCarreg).sort();
+const MIN_DATE = allDates[0], MAX_DATE = allDates[allDates.length-1];
+
+function populateFilterOptions(){
+  const clientes = [...new Set(DATA.embarques.map(e=>e.cliente))].sort();
+  const contratos = [...new Set(DATA.embarques.map(e=>e.contrato))].sort();
+  const transp = [...new Set(DATA.embarques.map(e=>e.transportadora))].sort();
+  const statuses = [...new Set(DATA.embarques.map(e=>e.statusConciliacao))].sort();
+  const fill = (sel, arr) => arr.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
+  fill(document.getElementById('f-cliente'), clientes);
+  fill(document.getElementById('f-contrato'), contratos);
+  fill(document.getElementById('f-transportadora'), transp);
+  fill(document.getElementById('f-status'), statuses);
+  document.getElementById('f-de').value = MIN_DATE;
+  document.getElementById('f-ate').value = MAX_DATE;
+  document.getElementById('f-de').min = MIN_DATE; document.getElementById('f-de').max = MAX_DATE;
+  document.getElementById('f-ate').min = MIN_DATE; document.getElementById('f-ate').max = MAX_DATE;
+}
+
+function getFilters(){
+  return {
+    de: document.getElementById('f-de').value || MIN_DATE,
+    ate: document.getElementById('f-ate').value || MAX_DATE,
+    cliente: document.getElementById('f-cliente').value,
+    contrato: document.getElementById('f-contrato').value,
+    transportadora: document.getElementById('f-transportadora').value,
+    status: document.getElementById('f-status').value,
+  };
+}
+
+function filteredEmbarques(){
+  const f = getFilters();
+  return DATA.embarques.filter(e=>
+    e.dataCarreg >= f.de && e.dataCarreg <= f.ate &&
+    (!f.cliente || e.cliente===f.cliente) &&
+    (!f.contrato || e.contrato===f.contrato) &&
+    (!f.transportadora || e.transportadora===f.transportadora) &&
+    (!f.status || e.statusConciliacao===f.status)
+  );
+}
+
+/* ---------------- KPI rendering ---------------- */
+function kpiTile(label, value, opts={}){
+  const cls = opts.cls ? ' '+opts.cls : '';
+  return `<div class="kpi${cls}">
+    <div class="label">${label}</div>
+    <div class="value">${value}${opts.unit ? `<span class="unit">${opts.unit}</span>`:''}</div>
+    ${opts.sub ? `<div class="sub">${opts.sub}</div>`:''}
+  </div>`;
+}
+
+function renderKpiVisao(rows){
+  const embarques = rows.length;
+  const volLiquido = sum(rows, r=>r.volLiquido);
+  const volProg = sum(rows, r=>r.volProg);
+  const receita = sum(rows, r=>r.receitaTotal);
+  const frete = sum(rows, r=>r.freteApurado);
+  const margem = receita - frete;
+  const aderencia = volProg ? sum(rows,r=>r.volEmb)/volProg : 0;
+  document.getElementById('kpi-visao').innerHTML = [
+    kpiTile('Embarques no período', fmtInt(embarques), {sub:`de ${DATA.embarques.length} no total`}),
+    kpiTile('Volume líquido aceito', fmtNum(volLiquido,1), {unit:'m³'}),
+    kpiTile('Receita faturada', fmtBRL(receita), {cls:'accent'}),
+    kpiTile('Frete apurado', fmtBRL(frete)),
+    kpiTile('Margem de contribuição', fmtBRL(margem), {cls:'accent', sub: receita? `${fmtPct(margem/receita)} da receita`:''}),
+    kpiTile('Aderência à programação', fmtPct(aderencia), {sub:'embarcado / programado'}),
+  ].join('');
+}
+
+function renderKpiOperacao(rows){
+  const volProg = sum(rows,r=>r.volProg), volEmb = sum(rows,r=>r.volEmb);
+  const difMedia = rows.length ? sum(rows,r=>r.difCubPct)/rows.length : 0;
+  const comOcorrencia = rows.filter(r=>r.ocorrencias>0).length;
+  document.getElementById('kpi-operacao').innerHTML = [
+    kpiTile('Volume programado', fmtNum(volProg,0), {unit:'m³'}),
+    kpiTile('Volume embarcado', fmtNum(volEmb,0), {unit:'m³'}),
+    kpiTile('Diferença de cubagem média', fmtPct(difMedia), {cls: Math.abs(difMedia)>0.02?'warn':''}),
+    kpiTile('Embarques com ocorrência', fmtInt(comOcorrencia), {sub:`de ${rows.length} filtrados`}),
+  ].join('');
+}
+
+function renderKpiFinanceiro(rows){
+  const receita = sum(rows,r=>r.receitaTotal);
+  const aFaturar = sum(rows,r=>r.valorAFaturar);
+  const frete = sum(rows,r=>r.freteApurado);
+  const aPagarTransp = sum(rows.filter(r=>r.statusPgtoTransp!=='PAGO'), r=>r.aPagarTransp);
+  const creditoMot = sum(rows, r=>r.creditoMotorista);
+  const volFaturado = sum(rows, r=>r.volNf) + sum(rows, r=>r.volComplemento||0);
+  const precoMedio = volFaturado ? receita/volFaturado : 0;
+  document.getElementById('kpi-financeiro').innerHTML = [
+    kpiTile('Receita faturada', fmtBRL(receita), {cls:'accent'}),
+    kpiTile('Valor a faturar', fmtBRL(aFaturar)),
+    kpiTile('Preço médio realizado', fmtNum(precoMedio,2), {unit:'R$/m³'}),
+    kpiTile('Frete apurado total', fmtBRL(frete)),
+    kpiTile('Saldo a pagar — transportadora', fmtBRL(aPagarTransp), {cls: aPagarTransp>0?'warn':''}),
+    kpiTile('Crédito ao motorista', fmtBRL(creditoMot)),
+  ].join('');
+}
+
+function renderKpiContratos(rows){
+  const contratos = DATA.contratos.length;
+  const ativos = DATA.contratos.filter(c=>c.status==='ATIVO').length;
+  const clientes = new Set(DATA.clientesLocais.map(c=>c.cliente)).size;
+  const volumeTotal = sum(DATA.contratos, c=>c.volumeContratado);
+  document.getElementById('kpi-contratos').innerHTML = [
+    kpiTile('Contratos cadastrados', fmtInt(contratos), {sub:`${ativos} ativos`}),
+    kpiTile('Clientes ativos', fmtInt(clientes)),
+    kpiTile('Volume total contratado', fmtNum(volumeTotal,0), {unit:'m³'}),
+    kpiTile('Locais de descarga', fmtInt(DATA.clientesLocais.length)),
+  ].join('');
+}
+
+function renderKpiTransporte(rows){
+  const saldoMotoristas = sum(DATA.motoristas, m=>m.saldoAberto);
+  const motoristasAtivos = DATA.motoristas.filter(m=>m.status==='ATIVO').length;
+  const vigentes = DATA.tarifasFrete.filter(t=>t.situacao==='VIGENTE');
+  const precoComb = DATA.precosCombustivel[DATA.precosCombustivel.length-1];
+  document.getElementById('kpi-transporte').innerHTML = [
+    kpiTile('Motoristas ativos', fmtInt(motoristasAtivos), {sub:`${DATA.motoristas.length} cadastrados`}),
+    kpiTile('Saldo em aberto acumulado', fmtBRL(saldoMotoristas), {cls:'warn'}),
+    kpiTile('Rotas com tarifa vigente', fmtInt(vigentes.length), {sub:`de ${DATA.tarifasFrete.length} tarifas cadastradas`}),
+    kpiTile('Diesel — preço vigente', precoComb? fmtNum(precoComb.precoLitro,2):'—', {unit:'R$/L'}),
+  ].join('');
+}
+
+function renderKpiAuditoria(rows){
+  const totalOcorrencias = sum(rows, r=>r.ocorrencias);
+  const comOcorrencia = rows.filter(r=>r.ocorrencias>0).length;
+  const conformes = rows.length - comOcorrencia;
+  const pctConforme = rows.length ? conformes/rows.length : 0;
+  document.getElementById('kpi-auditoria').innerHTML = [
+    kpiTile('Ocorrências no período', fmtInt(totalOcorrencias)),
+    kpiTile('Embarques com pendência', fmtInt(comOcorrencia), {cls: comOcorrencia>0?'warn':''}),
+    kpiTile('Embarques conformes', fmtInt(conformes)),
+    kpiTile('% conformidade', fmtPct(pctConforme)),
+  ].join('');
+}
+
+/* ---------------- charts ---------------- */
+function chartVolumeDia(rows){
+  const byDate = {};
+  rows.forEach(r=>{ byDate[r.dataCarreg] = (byDate[r.dataCarreg]||0) + r.volEmb; });
+  const dates = Object.keys(byDate).sort();
+  const values = dates.map(d=>byDate[d]);
+  const ctx = document.getElementById('chart-volume-dia');
+  charts.volumeDia = new Chart(ctx, {
+    type:'line',
+    data:{ labels: dates.map(fmtDate), datasets:[{
+      label:'Volume embarcado', data: values, borderColor: css('--s1'), backgroundColor: css('--s1')+'1a',
+      borderWidth:2, pointRadius:3, pointHoverRadius:5, pointBackgroundColor: css('--s1'),
+      pointBorderColor: css('--surface'), pointBorderWidth:2, fill:true, tension:0.25,
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c=> ' '+fmtNum(c.parsed.y,0)+' m³' } } },
+      scales:{
+        x:{ grid:{display:false}, ticks:{maxRotation:0} },
+        y:{ grid:{color: css('--grid')}, border:{display:false}, ticks:{ callback:v=>fmtNum(v,0) } }
+      }
+    }
+  });
+}
+
+function chartConciliacao(rows){
+  const counts = {};
+  rows.forEach(r=>{ counts[r.statusConciliacao] = (counts[r.statusConciliacao]||0)+1; });
+  const labels = Object.keys(counts);
+  const palette = [css('--s1'),css('--s2'),css('--s3'),css('--s4'),css('--s5'),css('--s6')];
+  const ctx = document.getElementById('chart-conciliacao');
+  charts.conciliacao = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels, datasets:[{ data: labels.map(l=>counts[l]), backgroundColor: labels.map((_,i)=>palette[i%palette.length]), borderColor: css('--surface'), borderWidth:2 }]},
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'62%',
+      plugins:{ legend:{ position:'bottom', labels:{padding:12} },
+        tooltip:{ callbacks:{ label: c=> ` ${c.label}: ${c.parsed} embarque(s)` } } }
+    }
+  });
+}
+
+function chartReceitaCliente(rows){
+  const byClient = {};
+  rows.forEach(r=>{ byClient[r.cliente] = (byClient[r.cliente]||0) + r.receitaTotal; });
+  const labels = Object.keys(byClient).sort((a,b)=>byClient[b]-byClient[a]);
+  const values = labels.map(l=>byClient[l]);
+  const ctx = document.getElementById('chart-receita-cliente');
+  charts.receitaCliente = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{ data: values, backgroundColor: css('--s1'), borderRadius:4, maxBarThickness:24 }]},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=>' '+fmtBRL(c.parsed.x) } } },
+      scales:{ x:{ grid:{color:css('--grid')}, border:{display:false}, ticks:{ callback:v=>fmtBRLc(v) } }, y:{ grid:{display:false} } }
+    }
+  });
+}
+
+function chartCubagem(rows){
+  const sorted = [...rows].sort((a,b)=> a.num-b.num);
+  const labels = sorted.map(r=>'#'+r.num);
+  const values = sorted.map(r=>r.difCubPct*100);
+  const colors = sorted.map(r=> Math.abs(r.difCubPct) > 0.02 ? css('--critical') : css('--good'));
+  const ctx = document.getElementById('chart-cubagem');
+  charts.cubagem = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{ data: values, backgroundColor: colors, borderRadius:3, maxBarThickness:16 }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=>' '+fmtNum(c.parsed.y,2)+'%' } } },
+      scales:{
+        x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:true, maxTicksLimit:16 } },
+        y:{ grid:{color:css('--grid')}, border:{display:false}, ticks:{ callback:v=>v+'%' } }
+      }
+    }
+  });
+}
+
+function chartFrete(rows){
+  const sorted = [...rows].sort((a,b)=> a.num-b.num);
+  const labels = sorted.map(r=>'#'+r.num);
+  const ctx = document.getElementById('chart-frete');
+  charts.frete = new Chart(ctx, {
+    type:'line',
+    data:{ labels, datasets:[
+      { label:'Frete apurado', data: sorted.map(r=>r.freteApurado), borderColor: css('--s1'), backgroundColor:'transparent', borderWidth:2, pointRadius:2, tension:0.2 },
+      { label:'Pago à transportadora', data: sorted.map(r=>r.valorPagoTransp||0), borderColor: css('--s2'), backgroundColor:'transparent', borderWidth:2, pointRadius:2, tension:0.2 },
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'bottom', labels:{padding:12} }, tooltip:{ callbacks:{ label:c=>` ${c.dataset.label}: ${fmtBRL(c.parsed.y)}` } } },
+      scales:{ x:{ grid:{display:false}, ticks:{maxTicksLimit:12} }, y:{ grid:{color:css('--grid')}, border:{display:false}, ticks:{ callback:v=>fmtBRLc(v) } } }
+    }
+  });
+}
+
+function chartPgtoTransp(rows){
+  const byStatus = {};
+  rows.forEach(r=>{ byStatus[r.statusPgtoTransp] = (byStatus[r.statusPgtoTransp]||0) + r.aPagarTransp; });
+  const labels = Object.keys(byStatus);
+  const map = {'PAGO':css('--good'), 'A PAGAR':css('--warning'), 'AGUARDA CT-E':css('--text-muted')};
+  const ctx = document.getElementById('chart-pgto-transp');
+  charts.pgtoTransp = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels, datasets:[{ data: labels.map(l=>byStatus[l]), backgroundColor: labels.map(l=>map[l]||css('--s3')), borderColor: css('--surface'), borderWidth:2 }]},
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'62%',
+      plugins:{ legend:{ position:'bottom', labels:{padding:12} }, tooltip:{ callbacks:{ label:c=>` ${c.label}: ${fmtBRL(c.parsed)}` } } }
+    }
+  });
+}
+
+function chartMotoristas(){
+  const sorted = [...DATA.motoristas].sort((a,b)=>b.saldoAberto-a.saldoAberto);
+  const labels = sorted.map(m=>m.nome);
+  const ctx = document.getElementById('chart-motoristas');
+  charts.motoristas = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{ data: sorted.map(m=>m.saldoAberto), backgroundColor: css('--s7'), borderRadius:4, maxBarThickness:22 }]},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=>' '+fmtBRL(c.parsed.x) } } },
+      scales:{ x:{ grid:{color:css('--grid')}, border:{display:false}, ticks:{ callback:v=>fmtBRLc(v) } }, y:{ grid:{display:false} } }
+    }
+  });
+}
+
+function chartAuditoria(){
+  const items = DATA.auditoriaResumo.filter(a=>a.verificacao !== 'TOTAL DE OCORRÊNCIAS').sort((a,b)=>b.ocorrencias-a.ocorrencias);
+  const labels = items.map(a=>a.verificacao);
+  const colors = items.map(a=> a.situacao==='TRATAR' ? css('--critical') : css('--good'));
+  const ctx = document.getElementById('chart-auditoria');
+  charts.auditoria = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{ data: items.map(a=>a.ocorrencias), backgroundColor: colors, borderRadius:3, maxBarThickness:16 }]},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=>' '+fmtInt(c.parsed.x)+' embarque(s)' } } },
+      scales:{ x:{ grid:{color:css('--grid')}, border:{display:false}, ticks:{ precision:0 } }, y:{ grid:{display:false}, ticks:{ font:{size:11} } } }
+    }
+  });
+}
+
+/* ---------------- meters (execução por contrato) ---------------- */
+function renderMeterContratos(){
+  const el = document.getElementById('meter-contratos');
+  if(!DATA.posicaoContrato.length){ el.innerHTML = '<div class="empty-note">Sem contratos cadastrados.</div>'; return; }
+  el.innerHTML = DATA.posicaoContrato.map(c=>{
+    const pct = Math.min(c.pctExecutado,1);
+    return `<div class="meter-row">
+      <div class="meter-top"><span class="name">${c.cliente} <span style="color:var(--text-muted); font-weight:400;">— ${c.contrato}</span></span><span class="val">${fmtPct(c.pctExecutado)}</span></div>
+      <div class="meter-track"><div class="meter-fill" style="width:${(pct*100).toFixed(1)}%; background:${pct<0.5? 'var(--s4)': 'var(--s1)'}"></div></div>
+      <div class="meter-sub">${fmtNum(c.volumeLiquido,0)} de ${fmtNum(c.volumeContratado,0)} m³ &middot; margem ${fmtBRL(c.margem)}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ---------------- tables ---------------- */
+function renderTableEmbarques(rows){
+  const sorted = [...rows].sort((a,b)=> b.dataCarreg.localeCompare(a.dataCarreg) || b.num-a.num);
+  const el = document.getElementById('tbl-embarques');
+  if(!sorted.length){ el.innerHTML = `<tr><td colspan="9" class="empty-note">Nenhum embarque no período/filtro selecionado.</td></tr>`; return; }
+  el.innerHTML = sorted.map(r=>`<tr>
+    <td class="num">${r.num}</td><td>${fmtDate(r.dataCarreg)}</td><td>${r.cliente}</td><td>${r.local}</td>
+    <td class="num">${fmtNum(r.volEmb,1)}</td><td class="num">${fmtNum(r.volLiquido,1)}</td>
+    <td class="num">${fmtNum(r.difCubPct*100,2)}%</td><td>${statusPill(r.statusConciliacao)}</td>
+    <td class="num">${r.ocorrencias}</td>
+  </tr>`).join('');
+}
+
+function renderTableFinanceiroContratos(){
+  const el = document.getElementById('tbl-financeiro-contratos');
+  el.innerHTML = DATA.posicaoContrato.map(c=>`<tr>
+    <td>${c.contrato}</td><td>${c.cliente}</td><td class="num">${fmtBRL(c.receitaFaturada)}</td>
+    <td class="num">${fmtBRL(c.freteDevido)}</td><td class="num">${fmtBRL(c.margem)}</td>
+    <td class="num">${fmtNum(c.margemUnitaria,2)}</td><td>${statusPill(c.status)}</td>
+  </tr>`).join('');
+}
+
+function renderTableContratos(){
+  document.getElementById('tbl-contratos').innerHTML = DATA.contratos.map(c=>`<tr>
+    <td>${c.contrato}</td><td>${c.cliente}</td><td>${c.produto}</td>
+    <td class="num">${fmtNum(c.volumeContratado,0)}</td><td class="num">${fmtNum(c.preco,2)}</td>
+    <td>${fmtDate(c.inicioVigencia)}</td><td>${fmtDate(c.fimVigencia)}</td>
+    <td>${c.condicaoPagamento||'—'}</td><td>${statusPill(c.status)}</td>
+  </tr>`).join('');
+}
+
+function renderTableClientes(){
+  document.getElementById('tbl-clientes').innerHTML = DATA.clientesLocais.map(c=>`<tr>
+    <td>${c.cliente}</td><td>${c.local}</td><td>${c.cidadeUf||'—'}</td>
+    <td>${c.exigeAgendamento==='SIM' ? statusPill('AGENDAMENTO EXIGIDO').replace('AGENDAMENTO EXIGIDO','sim') : '<span class="pill pill-neutral"><span class="dot"></span>não</span>'}</td>
+  </tr>`).join('');
+}
+
+function renderTableTransportadoras(){
+  document.getElementById('tbl-transportadoras').innerHTML = DATA.transportadoras.map(t=>`<tr>
+    <td>${t.nome}</td><td class="num">${t.cnpj}</td><td>${t.prazoPagamento}</td><td>${statusPill(t.status)}</td>
+  </tr>`).join('');
+}
+
+function renderTableTarifas(){
+  document.getElementById('tbl-tarifas').innerHTML = DATA.tarifasFrete.map(t=>`<tr>
+    <td>${t.local}</td><td class="num">${fmtNum(t.tarifaCheia ?? t.tarifaCte,2)}${t.tarifaCheia==null? ' <span style="color:var(--text-muted); font-family:\'IBM Plex Sans\';">(= CT-e)</span>':''}</td>
+    <td class="num">${fmtNum(t.tarifaCte,2)}</td><td>${fmtDate(t.vigencia)}</td><td>${statusPill(t.situacao)}</td>
+  </tr>`).join('');
+}
+
+function renderTableMotoristas(){
+  const sorted = [...DATA.motoristas].sort((a,b)=>b.saldoAPagar-a.saldoAPagar);
+  document.getElementById('tbl-motoristas').innerHTML = sorted.map(m=>`<tr>
+    <td>${m.nome}</td><td class="num">${m.placaCavalo}</td><td class="num">${m.entregas||0}</td>
+    <td class="num">${fmtBRL(m.credito)}</td><td class="num">${fmtBRL(m.combustivel)}</td>
+    <td class="num">${fmtBRL(m.saldoAPagar)}</td><td>${statusPill(m.situacaoFatura)}</td>
+  </tr>`).join('');
+}
+
+function renderTableAuditoria(rows){
+  const sorted = rows.filter(r=>r.ocorrencias>0).sort((a,b)=>b.ocorrencias-a.ocorrencias);
+  const el = document.getElementById('tbl-auditoria');
+  if(!sorted.length){ el.innerHTML = `<tr><td colspan="5" class="empty-note">Nenhuma pendência no período/filtro selecionado.</td></tr>`; return; }
+  el.innerHTML = sorted.map(r=>`<tr>
+    <td class="num">${r.num}</td><td>${fmtDate(r.dataCarreg)}</td><td>${r.cliente}</td>
+    <td class="num">${r.ocorrencias}</td><td>${statusPill(r.statusCiclo)}</td>
+  </tr>`).join('');
+}
+
+/* ---------------- main render ---------------- */
+function updatePeriodBadge(){
+  const f = getFilters();
+  document.getElementById('period-badge').textContent = `${fmtDate(f.de)} – ${fmtDate(f.ate)}`;
+}
+
+function renderAll(){
+  destroyCharts();
+  const rows = filteredEmbarques();
+  currentRows = rows;
+  updatePeriodBadge();
+  document.getElementById('filter-count').textContent = `${rows.length} de ${DATA.embarques.length} embarques correspondem ao filtro.`;
+
+  renderKpiVisao(rows);
+  renderMeterContratos();
+
+  renderKpiOperacao(rows);
+  renderTableEmbarques(rows);
+
+  renderKpiFinanceiro(rows);
+  renderTableFinanceiroContratos();
+
+  renderKpiContratos(rows);
+  renderTableContratos();
+  renderTableClientes();
+
+  renderKpiTransporte(rows);
+  renderTableTransportadoras();
+  renderTableTarifas();
+  renderTableMotoristas();
+
+  renderKpiAuditoria(rows);
+  renderTableAuditoria(rows);
+
+  // Charts only for the tab that's actually visible right now — a canvas
+  // created inside a display:none container gets stuck at zero size.
+  renderChartsForView(currentView, rows);
+}
+
+/* ---------------- nav / view switching ---------------- */
+const viewTitles = {
+  visao: ['Visão geral','Terra Biomassa Indústria e Comércio Ltda · biomassa — cavaco de madeira'],
+  operacao: ['Operação & embarques','Programação, embarque e conferência de volume'],
+  financeiro: ['Financeiro & frete','Faturamento, frete apurado e margem de contribuição'],
+  contratos: ['Contratos & clientes','Cadastro comercial e locais de descarga'],
+  transporte: ['Transporte & motoristas','Transportadoras, tarifas e apuração do motorista'],
+  auditoria: ['Auditoria & controle','Verificações automáticas de consistência'],
+};
+
+function setView(view){
+  currentView = view;
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-'+view));
+  const [title, sub] = viewTitles[view];
+  document.getElementById('view-title').textContent = title;
+  document.getElementById('view-sub').textContent = sub;
+  closeSidebar();
+  // Charts for this tab may not exist yet (a canvas created while its tab
+  // was hidden gets stuck at zero size, so charts are only ever built for
+  // the tab that's visible at the time) — build them now that it is.
+  const needed = chartsByView[view] || [];
+  if(needed.some(key => !charts[key])){
+    needed.forEach(key => { if(charts[key]){ charts[key].destroy(); delete charts[key]; } });
+    renderChartsForView(view, currentRows);
+  }
+}
+
+function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('scrim').classList.add('show'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('scrim').classList.remove('show'); }
+
+/* ---------------- init ---------------- */
+function init(){
+  applyChartDefaults();
+  populateFilterOptions();
+  document.querySelectorAll('.nav-item').forEach(b=> b.addEventListener('click', ()=>setView(b.dataset.view)));
+  ['f-de','f-ate','f-cliente','f-contrato','f-transportadora','f-status'].forEach(id=>{
+    document.getElementById(id).addEventListener('change', renderAll);
+  });
+  document.getElementById('reset-filters').addEventListener('click', ()=>{
+    document.getElementById('f-de').value = MIN_DATE;
+    document.getElementById('f-ate').value = MAX_DATE;
+    document.getElementById('f-cliente').value = '';
+    document.getElementById('f-contrato').value = '';
+    document.getElementById('f-transportadora').value = '';
+    document.getElementById('f-status').value = '';
+    renderAll();
+  });
+  document.getElementById('menu-btn').addEventListener('click', openSidebar);
+  document.getElementById('scrim').addEventListener('click', closeSidebar);
+  renderAll();
+}
+
+function boot(){
+  if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', init); } else { init(); }
+}
+
+/* ---------------- acesso ---------------- */
+const GATE_HASH = 'bfdce426009e784805788a055c6a7c64d75ea830049b6cff25b6cce4703881ed';
+async function sha256Hex(text){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function tryUnlock(){
+  const input = document.getElementById('gate-pass');
+  const err = document.getElementById('gate-error');
+  const hash = await sha256Hex(input.value);
+  if(hash === GATE_HASH){
+    sessionStorage.setItem('tbAuth', '1');
+    document.body.classList.add('unlocked');
+    err.style.display = 'none';
+    boot();
+  } else {
+    err.style.display = 'block';
+    input.value = '';
+    input.focus();
+  }
+}
+document.getElementById('gate-btn').addEventListener('click', tryUnlock);
+document.getElementById('gate-pass').addEventListener('keydown', e => { if(e.key === 'Enter') tryUnlock(); });
+if(sessionStorage.getItem('tbAuth') === '1'){
+  document.body.classList.add('unlocked');
+  boot();
+}
+</script>
