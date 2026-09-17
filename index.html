@@ -244,6 +244,15 @@
     .content{ padding:16px 16px 40px; }
     .grid-2, .grid-3{ grid-template-columns:1fr; }
     footer.app-footer{ padding:8px 16px 28px; }
+    .kpi-grid{ grid-template-columns:1fr; }
+    .kpi .value{ font-size:28px; }
+    .kpi .label{ font-size:13px; }
+    .kpi .sub{ font-size:13px; }
+    table{ font-size:14.5px; }
+    thead th{ font-size:11.5px; }
+    .card-head h3{ font-size:15px; }
+    .section-title h2{ font-size:15px; }
+    .meter-top{ font-size:14px; }
   }
   .scrim{ display:none; }
   .scrim.show{ display:block; position:fixed; inset:0; background:rgba(10,12,8,0.35); z-index:15; }
@@ -569,7 +578,7 @@ function statusPill(status){
 /* ---------------- Chart.js global defaults ---------------- */
 function applyChartDefaults(){
   Chart.defaults.font.family = "IBM Plex Sans, system-ui, sans-serif";
-  Chart.defaults.font.size = 11.5;
+  Chart.defaults.font.size = window.innerWidth<640 ? 13 : 11.5;
   Chart.defaults.color = css('--text-secondary');
   Chart.defaults.borderColor = css('--grid');
   Chart.defaults.plugins.legend.labels.usePointStyle = true;
@@ -767,7 +776,7 @@ function chartVolumeDia(rows){
       responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c=> ' '+fmtNum(c.parsed.y,0)+' m³' } } },
       scales:{
-        x:{ grid:{display:false}, ticks:{maxRotation:0} },
+        x:{ grid:{display:false}, ticks:{maxRotation:0, autoSkip:true, maxTicksLimit: window.innerWidth<640?5:20} },
         y:{ grid:{color: css('--grid')}, border:{display:false}, ticks:{ callback:v=>fmtNum(v,0) } }
       }
     }
@@ -821,7 +830,7 @@ function chartCubagem(rows){
       responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=>' '+fmtNum(c.parsed.y,2)+'%' } } },
       scales:{
-        x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:true, maxTicksLimit:16 } },
+        x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:true, maxTicksLimit: window.innerWidth<640?8:16 } },
         y:{ grid:{color:css('--grid')}, border:{display:false}, ticks:{ callback:v=>v+'%' } }
       }
     }
@@ -841,7 +850,7 @@ function chartFrete(rows){
     options:{
       responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{ position:'bottom', labels:{padding:12} }, tooltip:{ callbacks:{ label:c=>` ${c.dataset.label}: ${fmtBRL(c.parsed.y)}` } } },
-      scales:{ x:{ grid:{display:false}, ticks:{maxTicksLimit:12} }, y:{ grid:{color:css('--grid')}, border:{display:false}, ticks:{ callback:v=>fmtBRLc(v) } } }
+      scales:{ x:{ grid:{display:false}, ticks:{maxTicksLimit: window.innerWidth<640?6:12} }, y:{ grid:{color:css('--grid')}, border:{display:false}, ticks:{ callback:v=>fmtBRLc(v) } } }
     }
   });
 }
