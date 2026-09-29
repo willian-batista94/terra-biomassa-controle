@@ -6,10 +6,11 @@ Uso:
     python gerar_dashboard.py --check          # só valida, sem gravar nada
     python gerar_dashboard.py --sem-publicar   # gera e cifra, mas não publica
 
-A senha do painel vem da variável de ambiente TB_SENHA; se ela não existir, é
-pedida no terminal. Ela nunca é gravada em arquivo: o index.html publicado
-leva os dados cifrados (PBKDF2-SHA256 + AES-256-GCM) e só o navegador, com a
-senha, consegue abri-los. O dashboard.html (local, fora do git) mantém os
+A senha de abertura do painel é lida do arquivo local senha_painel.txt (fora
+do git) ou da variável TB_SENHA; só é perguntada no terminal se nenhum dos
+dois existir. O index.html publicado leva os dados cifrados (PBKDF2-SHA256 +
+AES-256-GCM) e só o navegador, com a senha, consegue abri-los. Para trocar a
+senha, edite senha_painel.txt e rode o script de novo. O dashboard.html (local, fora do git) mantém os
 dados abertos para desenvolvimento.
 
 Robustez contra novas versões da planilha:
@@ -43,6 +44,7 @@ JSON_PATH = BASE_DIR / "dashboard_slim.json"
 HIST_PATH = BASE_DIR / "historico_kpis.json"
 HTML_SOURCE = BASE_DIR / "dashboard.html"
 HTML_PUBLISH = BASE_DIR / "index.html"
+SENHA_PATH = BASE_DIR / "senha_painel.txt"
 
 PBKDF2_ITER = 600_000
 
@@ -744,14 +746,23 @@ def gravar_html_publico(dados: dict, senha: str):
 
 
 def obter_senha() -> str:
+    """Senha de abertura do painel, usada para cifrar os dados. Ordem: variável
+    TB_SENHA, arquivo local senha_painel.txt (fora do git) e, só se nenhum dos
+    dois existir, pergunta uma vez no terminal e grava no arquivo."""
     senha = os.environ.get("TB_SENHA")
     if senha:
         return senha
-    senha = getpass.getpass("Senha do painel (usada para cifrar os dados): ")
+    if SENHA_PATH.exists():
+        senha = SENHA_PATH.read_text(encoding="utf-8").strip()
+        if senha:
+            return senha
+    senha = getpass.getpass("Senha de abertura do painel (pedida só desta vez): ")
     if not senha:
         raise SystemExit("Senha vazia; nada foi publicado.")
     if getpass.getpass("Confirme a senha: ") != senha:
         raise SystemExit("As senhas não conferem; nada foi publicado.")
+    SENHA_PATH.write_text(senha, encoding="utf-8")
+    print(f"Senha gravada em {SENHA_PATH.name} (arquivo local, fora do git).")
     return senha
 
 

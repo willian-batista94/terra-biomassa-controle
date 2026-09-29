@@ -21,7 +21,7 @@ python gerar_dashboard.py --check
 python gerar_dashboard.py --sem-publicar
 ```
 
-Requires `openpyxl` and `cryptography`. The password comes from the `TB_SENHA` env var, or is prompted (twice) on the terminal; it is never written to disk. `git` needs push access to `origin`.
+Requires `openpyxl` and `cryptography`. The dashboard password (used to encrypt) is read from `TB_SENHA` if set, else from the local, gitignored `senha_painel.txt`; only if neither exists is it prompted once and saved there. Never put it in the script: the script is public. `git` needs push access to `origin`.
 
 Manual browser testing: `python -m http.server 8000` and open `dashboard.html` (plain data, no password) or `index.html` (encrypted, asks the password).
 
@@ -75,4 +75,4 @@ The per-contract summary at the top of CONTAS A RECEBER and the totals columns o
 
 Public GitHub repo `willian-batista94/terra-biomassa-controle`, GitHub Pages serving `index.html` from `master` → `https://willian-batista94.github.io/terra-biomassa-controle/`. Tracked: `index.html`, `gerar_dashboard.py`, `.gitignore`, `CLAUDE.md`. Everything with data in plain text (`dados/`, `dashboard.html`, `dashboard_slim.json`, `historico_kpis.json`) is gitignored. Note: commits before the encryption change still contain `dashboard_slim.json` in plain text in the git history.
 
-To change the password, just run the generator with the new one; there is no hash stored anywhere.
+To change the password, edit `senha_painel.txt` and run the generator; there is no hash stored anywhere.
